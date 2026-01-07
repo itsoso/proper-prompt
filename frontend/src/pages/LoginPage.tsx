@@ -142,11 +142,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-dark-600 text-center">
-            <p className="text-dark-500 text-sm">
-              默认账号: <span className="text-dark-300">admin</span> / <span className="text-dark-300">admin123</span>
-            </p>
-          </div>
         </div>
 
         {/* Footer */}
