@@ -32,9 +32,9 @@ class Group(Base):
     type: Mapped[GroupType] = mapped_column(SQLEnum(GroupType), default=GroupType.CUSTOM, comment="群组类型")
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="群组描述")
     
-    # Metadata
+    # Group info
     member_count: Mapped[int] = mapped_column(Integer, default=0, comment="成员数量")
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, comment="额外元数据")
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, comment="额外元数据")
     
     # Prompt configuration
     custom_prompt_template: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="自定义Prompt模板")

@@ -12,7 +12,7 @@ class GroupBase(BaseModel):
     type: GroupType = Field(default=GroupType.CUSTOM, description="群组类型")
     description: Optional[str] = Field(None, description="群组描述")
     member_count: int = Field(default=0, ge=0, description="成员数量")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="额外元数据")
+    extra_data: Optional[Dict[str, Any]] = Field(None, description="额外元数据")
 
 
 class GroupCreate(GroupBase):
@@ -27,7 +27,7 @@ class GroupUpdate(BaseModel):
     type: Optional[GroupType] = None
     description: Optional[str] = None
     member_count: Optional[int] = Field(None, ge=0)
-    metadata: Optional[Dict[str, Any]] = None
+    extra_data: Optional[Dict[str, Any]] = None
     custom_prompt_template: Optional[str] = None
     is_active: Optional[bool] = None
 
