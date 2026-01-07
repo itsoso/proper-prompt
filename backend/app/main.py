@@ -29,6 +29,13 @@ async def lifespan(app: FastAPI):
     
     await init_db()
     
+    # Ensure default admin exists
+    from app.core.database import get_db_context
+    from app.services.user_service import UserService
+    async with get_db_context() as db:
+        user_service = UserService(db)
+        await user_service.ensure_admin_exists()
+    
     logger.info("application_started")
     
     yield

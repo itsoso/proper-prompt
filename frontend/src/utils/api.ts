@@ -23,6 +23,19 @@ apiClient.interceptors.request.use(
 
     debugLog.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`, config.data, 'API')
     
+    // Add auth token if available
+    const authData = localStorage.getItem('proper-prompts-auth')
+    if (authData) {
+      try {
+        const { state } = JSON.parse(authData)
+        if (state?.token) {
+          config.headers['Authorization'] = `Bearer ${state.token}`
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    
     // Add API key if available
     const apiKey = localStorage.getItem('api_key')
     if (apiKey) {
@@ -68,6 +81,25 @@ declare module 'axios' {
 
 // API methods
 export const api = {
+  // Authentication
+  auth: {
+    login: (username: string, password: string) =>
+      apiClient.post('/auth/login', new URLSearchParams({ username, password }), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }),
+    loginJson: (username: string, password: string) =>
+      apiClient.post('/auth/login/json', { username, password }),
+    me: () => apiClient.get('/auth/me'),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      apiClient.post('/auth/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    logout: () => apiClient.post('/auth/logout'),
+    createUser: (data: { username: string; password: string; email?: string; full_name?: string; is_superuser?: boolean }) =>
+      apiClient.post('/auth/users', data),
+  },
+
   // Groups
   groups: {
     list: (params?: { page?: number; size?: number; type?: string; search?: string }) =>

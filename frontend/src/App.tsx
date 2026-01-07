@@ -1,6 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import GroupsPage from './pages/GroupsPage'
 import PromptsPage from './pages/PromptsPage'
@@ -13,7 +15,18 @@ function App() {
   return (
     <AnimatePresence mode="wait">
       <Routes>
-        <Route path="/" element={<Layout />}>
+        {/* Public route */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="groups" element={<GroupsPage />} />
           <Route path="prompts" element={<PromptsPage />} />

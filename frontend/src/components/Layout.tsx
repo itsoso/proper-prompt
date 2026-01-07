@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -11,9 +11,13 @@ import {
   Menu,
   X,
   Sparkles,
+  LogOut,
+  User,
 } from 'lucide-react'
 import { useState } from 'react'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
+import { useAuthStore } from '../stores/authStore'
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: '控制台' },
@@ -27,7 +31,16 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuthStore()
+
+  const handleLogout = () => {
+    logout()
+    toast.success('已安全退出')
+    navigate('/login')
+  }
 
   return (
     <div className="min-h-screen bg-dark-950 bg-grid">
@@ -122,6 +135,47 @@ export default function Layout() {
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-800 border border-dark-600">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <span className="text-sm text-dark-300">系统正常</span>
+              </div>
+              
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-800 border border-dark-600 hover:border-primary-500/50 transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm text-white hidden md:block">
+                    {user?.full_name || user?.username || 'Admin'}
+                  </span>
+                </button>
+                
+                {showUserMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowUserMenu(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-0 mt-2 w-48 py-2 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50"
+                    >
+                      <div className="px-4 py-2 border-b border-dark-600">
+                        <p className="text-sm font-medium text-white">{user?.username}</p>
+                        <p className="text-xs text-dark-400">{user?.email || '管理员'}</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-dark-300 hover:bg-dark-700 hover:text-white flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        退出登录
+                      </button>
+                    </motion.div>
+                  </>
+                )}
               </div>
             </div>
           </div>
