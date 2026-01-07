@@ -40,9 +40,18 @@ class PromptTemplateUpdate(BaseModel):
     is_default: Optional[bool] = None
 
 
-class PromptTemplateResponse(PromptTemplateBase):
+class PromptTemplateResponse(BaseModel):
     """Schema for prompt template response"""
     id: int
+    name: str
+    description: Optional[str] = None
+    group_type: GroupType
+    time_granularity: TimeGranularity
+    style: PromptStyle
+    system_prompt: str
+    user_prompt_template: str
+    required_variables: Optional[List[str]] = None
+    optional_variables: Optional[List[str]] = None
     is_active: bool
     is_default: bool
     version: int
@@ -51,6 +60,14 @@ class PromptTemplateResponse(PromptTemplateBase):
     
     class Config:
         from_attributes = True
+    
+    def __init__(self, **data):
+        # Convert None to empty list
+        if data.get('required_variables') is None:
+            data['required_variables'] = []
+        if data.get('optional_variables') is None:
+            data['optional_variables'] = []
+        super().__init__(**data)
 
 
 class PromptExecutionCreate(BaseModel):
