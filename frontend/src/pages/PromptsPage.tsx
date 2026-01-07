@@ -251,44 +251,6 @@ export default function PromptsPage() {
         </div>
       </div>
 
-      {/* Built-in Templates Section */}
-      {builtinTemplates && builtinTemplates.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-4">内置模板</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {builtinTemplates.slice(0, 6).map((template: { group_type: string; time_granularity: string; style: string; template: string }, index: number) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="card bg-gradient-to-br from-dark-800 to-dark-900 hover:border-accent-500/50 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="badge badge-accent">内置</span>
-                    <span className="badge badge-primary">{granularityLabels[template.time_granularity]}</span>
-                  </div>
-                </div>
-                <h4 className="font-medium text-white mb-2">
-                  {template.group_type} - {styleLabels[template.style]}
-                </h4>
-                <p className="text-dark-400 text-sm line-clamp-2 mb-3">
-                  {template.template.slice(0, 100)}...
-                </p>
-                <button
-                  onClick={() => copyToClipboard(template.template)}
-                  className="btn btn-secondary w-full flex items-center justify-center gap-2 text-sm"
-                >
-                  <Copy className="w-4 h-4" />
-                  复制模板
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Custom Templates Section */}
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">自定义模板</h3>
@@ -378,6 +340,44 @@ export default function PromptsPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Built-in Templates Section */}
+      {builtinTemplates && builtinTemplates.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">内置模板</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {builtinTemplates.slice(0, 6).map((template: { group_type: string; time_granularity: string; style: string; template: string }, index: number) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="card bg-gradient-to-br from-dark-800 to-dark-900 hover:border-accent-500/50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="badge badge-accent">内置</span>
+                    <span className="badge badge-primary">{granularityLabels[template.time_granularity]}</span>
+                  </div>
+                </div>
+                <h4 className="font-medium text-white mb-2">
+                  {template.group_type} - {styleLabels[template.style]}
+                </h4>
+                <p className="text-dark-400 text-sm line-clamp-2 mb-3">
+                  {template.template.slice(0, 100)}...
+                </p>
+                <button
+                  onClick={() => copyToClipboard(template.template)}
+                  className="btn btn-secondary w-full flex items-center justify-center gap-2 text-sm"
+                >
+                  <Copy className="w-4 h-4" />
+                  复制模板
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Create Modal */}
       <AnimatePresence>
