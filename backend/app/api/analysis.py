@@ -156,6 +156,7 @@ async def quick_analysis(
         time_period=request.time_period,
         focus_members=request.focus_members,
         analysis_focus=request.analysis_focus,
+        custom_prompt=request.custom_prompt,
     )
     
     perf_logger.info(

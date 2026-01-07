@@ -72,6 +72,7 @@ class QuickAnalysisRequest(BaseModel):
     time_period: Optional[str] = Field(None, description="时间段描述，如 '今天', '本周', '本月'")
     focus_members: Optional[List[str]] = Field(None, description="关注的成员列表")
     analysis_focus: Optional[str] = Field(None, description="分析重点，如 '话题热度', '成员活跃度'")
+    custom_prompt: Optional[str] = Field(None, description="自定义Prompt模板，使用{chat_content}、{time_period}等变量")
 
 
 class QuickAnalysisResponse(BaseModel):

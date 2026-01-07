@@ -12,7 +12,9 @@ export default function AnalysisPage() {
     chat_content: '',
     time_period: '今天',
     analysis_focus: '',
+    custom_prompt: '',
   })
+  const [useCustomPrompt, setUseCustomPrompt] = useState(false)
 
   const [result, setResult] = useState<{
     analysis: string
@@ -124,6 +126,51 @@ export default function AnalysisPage() {
                 placeholder="如：话题热度、成员活跃度、投资观点..."
               />
             </div>
+
+            {/* Custom Prompt Toggle */}
+            <div className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
+              <div>
+                <p className="text-white text-sm font-medium">使用自定义 Prompt</p>
+                <p className="text-dark-400 text-xs">自定义分析提示词，获得更精准的结果</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUseCustomPrompt(!useCustomPrompt)}
+                className={`w-12 h-6 rounded-full transition-colors relative ${
+                  useCustomPrompt ? 'bg-primary-500' : 'bg-dark-600'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    useCustomPrompt ? 'left-7' : 'left-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Custom Prompt Input */}
+            {useCustomPrompt && (
+              <div>
+                <label className="label">自定义 Prompt</label>
+                <textarea
+                  value={formData.custom_prompt}
+                  onChange={(e) => setFormData({ ...formData, custom_prompt: e.target.value })}
+                  className="input min-h-[120px] font-mono text-sm"
+                  placeholder={`请分析以下群聊内容：
+
+1. 总结主要讨论话题
+2. 提取关键观点和建议
+3. 分析成员互动情况
+4. 给出综合评价
+
+聊天内容如下：
+{chat_content}`}
+                />
+                <p className="text-dark-500 text-xs mt-1">
+                  提示：使用 {'{chat_content}'} 代表聊天内容，{'{time_period}'} 代表时间段
+                </p>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between mb-1">

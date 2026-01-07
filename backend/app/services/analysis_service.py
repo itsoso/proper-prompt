@@ -200,46 +200,56 @@ class AnalysisService:
         time_period: Optional[str] = None,
         focus_members: Optional[List[str]] = None,
         analysis_focus: Optional[str] = None,
+        custom_prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Perform quick inline analysis without creating a task"""
         start_time = time.time()
         
-        # 转换群组类型
-        try:
-            gt = GroupType(group_type)
-        except ValueError:
-            gt = GroupType.CUSTOM
-        
-        # 确定时间粒度
-        time_granularity = TimeGranularity.DAILY
-        if time_period:
-            if "月" in time_period:
-                time_granularity = TimeGranularity.MONTHLY
-            elif "周" in time_period:
-                time_granularity = TimeGranularity.WEEKLY
-            elif "季" in time_period:
-                time_granularity = TimeGranularity.QUARTERLY
-            elif "年" in time_period:
-                time_granularity = TimeGranularity.YEARLY
-        
-        # 获取模板
-        prompt_template = self.prompt_service.get_builtin_template(
-            gt, time_granularity, PromptStyle.ANALYTICAL
-        )
-        
-        if not prompt_template:
-            prompt_template = self._get_generic_template(time_granularity)
-        
-        # 渲染Prompt
-        now = datetime.utcnow()
-        rendered_prompt = self.prompt_service.render_prompt(
-            template=prompt_template,
-            chat_content=chat_content,
-            start_date=now,
-            end_date=now,
-            member_filter=focus_members,
-            extra_variables={"analysis_focus": analysis_focus} if analysis_focus else None,
-        )
+        # 如果有自定义Prompt，直接使用
+        if custom_prompt:
+            rendered_prompt = custom_prompt.format(
+                chat_content=chat_content,
+                time_period=time_period or "今天",
+                group_type=group_type,
+                analysis_focus=analysis_focus or "",
+            )
+        else:
+            # 转换群组类型
+            try:
+                gt = GroupType(group_type)
+            except ValueError:
+                gt = GroupType.CUSTOM
+            
+            # 确定时间粒度
+            time_granularity = TimeGranularity.DAILY
+            if time_period:
+                if "月" in time_period:
+                    time_granularity = TimeGranularity.MONTHLY
+                elif "周" in time_period:
+                    time_granularity = TimeGranularity.WEEKLY
+                elif "季" in time_period:
+                    time_granularity = TimeGranularity.QUARTERLY
+                elif "年" in time_period:
+                    time_granularity = TimeGranularity.YEARLY
+            
+            # 获取模板
+            prompt_template = self.prompt_service.get_builtin_template(
+                gt, time_granularity, PromptStyle.ANALYTICAL
+            )
+            
+            if not prompt_template:
+                prompt_template = self._get_generic_template(time_granularity)
+            
+            # 渲染Prompt
+            now = datetime.utcnow()
+            rendered_prompt = self.prompt_service.render_prompt(
+                template=prompt_template,
+                chat_content=chat_content,
+                start_date=now,
+                end_date=now,
+                member_filter=focus_members,
+                extra_variables={"analysis_focus": analysis_focus} if analysis_focus else None,
+            )
         
         # 调用LLM
         response, tokens_in, tokens_out = await self.llm_service.chat(
