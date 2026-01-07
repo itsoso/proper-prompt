@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Trash2, FileText, Copy, Eye, X, Sparkles } from 'lucide-react'
+import { Plus, Search, Trash2, FileText, Copy, Eye, X, Sparkles, Edit2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 import { debugLog } from '../utils/debug'
@@ -47,7 +47,7 @@ export default function PromptsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false)
   const [viewingTemplate, setViewingTemplate] = useState<PromptTemplate | null>(null)
-  const [_editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null)
+  const [editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -115,6 +115,22 @@ export default function PromptsPage() {
     },
   })
 
+  // Update template mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<typeof formData> }) => 
+      api.prompts.templates.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+      toast.success('模板更新成功')
+      setIsModalOpen(false)
+      setEditingTemplate(null)
+      resetForm()
+    },
+    onError: (error: Error) => {
+      toast.error(`更新失败: ${error.message}`)
+    },
+  })
+
   // Delete template mutation
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.prompts.templates.delete(id),
@@ -141,7 +157,25 @@ export default function PromptsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    createMutation.mutate(formData)
+    if (editingTemplate) {
+      updateMutation.mutate({ id: editingTemplate.id, data: formData })
+    } else {
+      createMutation.mutate(formData)
+    }
+  }
+
+  const openEditModal = (template: PromptTemplate) => {
+    setEditingTemplate(template)
+    setFormData({
+      name: template.name,
+      description: template.description || '',
+      group_type: template.group_type,
+      time_granularity: template.time_granularity,
+      style: template.style,
+      system_prompt: template.system_prompt,
+      user_prompt_template: template.user_prompt_template,
+    })
+    setIsModalOpen(true)
   }
 
   const handleGenerate = (e: React.FormEvent) => {
@@ -308,12 +342,21 @@ export default function PromptsPage() {
                         setIsViewModalOpen(true)
                       }}
                       className="p-2 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-white transition-colors"
+                      title="查看"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
+                      onClick={() => openEditModal(template)}
+                      className="p-2 rounded-lg hover:bg-primary-500/20 text-dark-400 hover:text-primary-400 transition-colors"
+                      title="编辑"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => copyToClipboard(template.user_prompt_template)}
                       className="p-2 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-white transition-colors"
+                      title="复制"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
@@ -324,6 +367,7 @@ export default function PromptsPage() {
                         }
                       }}
                       className="p-2 rounded-lg hover:bg-red-500/20 text-dark-400 hover:text-red-400 transition-colors"
+                      title="删除"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -343,7 +387,11 @@ export default function PromptsPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setIsModalOpen(false)}
+            onClick={() => {
+              setIsModalOpen(false)
+              setEditingTemplate(null)
+              resetForm()
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -353,9 +401,15 @@ export default function PromptsPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">创建Prompt模板</h3>
+                <h3 className="text-xl font-semibold text-white">
+                  {editingTemplate ? '编辑Prompt模板' : '创建Prompt模板'}
+                </h3>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false)
+                    setEditingTemplate(null)
+                    resetForm()
+                  }}
                   className="p-2 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-white"
                 >
                   <X className="w-5 h-5" />
@@ -457,7 +511,11 @@ export default function PromptsPage() {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => {
+                      setIsModalOpen(false)
+                      setEditingTemplate(null)
+                      resetForm()
+                    }}
                     className="btn btn-secondary flex-1"
                   >
                     取消
@@ -465,9 +523,12 @@ export default function PromptsPage() {
                   <button
                     type="submit"
                     className="btn btn-primary flex-1"
-                    disabled={createMutation.isPending}
+                    disabled={createMutation.isPending || updateMutation.isPending}
                   >
-                    {createMutation.isPending ? '创建中...' : '创建'}
+                    {editingTemplate
+                      ? (updateMutation.isPending ? '保存中...' : '保存修改')
+                      : (createMutation.isPending ? '创建中...' : '创建')
+                    }
                   </button>
                 </div>
               </form>
