@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Key, Copy, Trash2, Eye, EyeOff, X, AlertCircle } from 'lucide-react'
+import { Plus, Key, Copy, Trash2, X, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 

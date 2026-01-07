@@ -1,7 +1,7 @@
 /**
  * API client for backend communication
  */
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance } from 'axios'
 import { debugLog } from './debug'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'

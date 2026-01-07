@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Edit2, Trash2, FileText, Copy, Eye, X, Sparkles } from 'lucide-react'
+import { Plus, Search, Trash2, FileText, Copy, Eye, X, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
-import clsx from 'clsx'
 import { api } from '../utils/api'
 import { debugLog } from '../utils/debug'
 
@@ -48,7 +47,7 @@ export default function PromptsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false)
   const [viewingTemplate, setViewingTemplate] = useState<PromptTemplate | null>(null)
-  const [editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null)
+  const [_editingTemplate, setEditingTemplate] = useState<PromptTemplate | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({

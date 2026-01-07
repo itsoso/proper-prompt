@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Settings, Save, RefreshCw, Database, Server, Key, Globe } from 'lucide-react'
+import { Save, RefreshCw, Database, Server, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { debugLog } from '../utils/debug'
 
