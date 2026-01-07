@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Save, RefreshCw, Database, Server, Globe } from 'lucide-react'
+import { Save, RefreshCw, Database, Server, Globe, Lock, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { debugLog } from '../utils/debug'
+import { api } from '../utils/api'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -12,6 +13,18 @@ export default function SettingsPage() {
     max_tokens: 4096,
   })
 
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  })
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+
   const [debugEnabled, setDebugEnabled] = useState(
     localStorage.getItem('debug') === 'true'
   )
@@ -20,6 +33,31 @@ export default function SettingsPage() {
     localStorage.setItem('llm_settings', JSON.stringify(settings))
     toast.success('设置已保存')
     debugLog.info('Settings saved', settings, 'SettingsPage')
+  }
+
+  const handleChangePassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('两次输入的新密码不一致')
+      return
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('新密码长度至少为6位')
+      return
+    }
+    
+    setIsChangingPassword(true)
+    try {
+      await api.auth.changePassword(passwordForm.currentPassword, passwordForm.newPassword)
+      toast.success('密码修改成功')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      debugLog.info('Password changed successfully', {}, 'SettingsPage')
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || '密码修改失败'
+      toast.error(errorMessage)
+      debugLog.error('Password change failed', err, 'SettingsPage')
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
   const toggleDebug = () => {
@@ -53,8 +91,89 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LLM Settings */}
+        {/* Password Settings */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-accent-400" />
+            修改密码
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="label">当前密码</label>
+              <div className="relative">
+                <input
+                  type={showPasswords.current ? 'text' : 'password'}
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  className="input pr-10"
+                  placeholder="请输入当前密码"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-white"
+                >
+                  {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="label">新密码</label>
+              <div className="relative">
+                <input
+                  type={showPasswords.new ? 'text' : 'password'}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="input pr-10"
+                  placeholder="请输入新密码（至少6位）"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-white"
+                >
+                  {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="label">确认新密码</label>
+              <div className="relative">
+                <input
+                  type={showPasswords.confirm ? 'text' : 'password'}
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="input pr-10"
+                  placeholder="请再次输入新密码"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-white"
+                >
+                  {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <button 
+              onClick={handleChangePassword} 
+              disabled={isChangingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+              className="btn btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isChangingPassword ? (
+                <div className="w-4 h-4 spinner" />
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  修改密码
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* LLM Settings */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Server className="w-5 h-5 text-primary-400" />
             LLM配置
@@ -111,7 +230,7 @@ export default function SettingsPage() {
         </motion.div>
 
         {/* Debug Settings */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Database className="w-5 h-5 text-accent-400" />
             调试与日志
@@ -154,7 +273,7 @@ export default function SettingsPage() {
         </motion.div>
 
         {/* Integration Info */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card lg:col-span-2">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card lg:col-span-2">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5 text-green-400" />
             外部集成
