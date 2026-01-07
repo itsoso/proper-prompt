@@ -48,6 +48,9 @@ check_command() {
     return 0
 }
 
+# Docker Compose command (V2 uses 'docker compose', V1 uses 'docker-compose')
+DOCKER_COMPOSE="docker compose"
+
 # Install dependencies
 install_dependencies() {
     print_step "Installing system dependencies..."
@@ -64,10 +67,10 @@ install_dependencies() {
         rm get-docker.sh
     fi
     
-    # Install Docker Compose if not present
-    if ! check_command docker-compose; then
-        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+    # Docker Compose V2 is included with Docker, verify it works
+    if ! docker compose version &> /dev/null; then
+        echo -e "${RED}Docker Compose plugin not found, installing...${NC}"
+        apt-get install -y docker-compose-plugin
     fi
     
     # Install certbot for SSL
@@ -116,7 +119,7 @@ setup_ssl() {
     fi
     
     # Stop nginx if running
-    docker-compose -f ${DEPLOY_DIR}/deploy/docker-compose.yml down nginx 2>/dev/null || true
+    ${DOCKER_COMPOSE} -f ${DEPLOY_DIR}/deploy/docker-compose.yml down nginx 2>/dev/null || true
     
     # Get certificate
     certbot certonly --standalone -d ${DOMAIN} --non-interactive --agree-tos --email admin@westwetlandtech.com
@@ -169,13 +172,13 @@ deploy() {
     cd ${DEPLOY_DIR}/deploy
     
     # Pull latest images
-    docker-compose pull
+    ${DOCKER_COMPOSE} pull
     
     # Build custom images
-    docker-compose build --no-cache
+    ${DOCKER_COMPOSE} build --no-cache
     
     # Start services
-    docker-compose up -d
+    ${DOCKER_COMPOSE} up -d
     
     # Wait for services to start
     print_info "Waiting for services to start..."
@@ -197,7 +200,7 @@ setup_ssl_renewal() {
     
     # Create renewal script
     cat > /etc/cron.d/certbot-renew << EOF
-0 0 1 * * root certbot renew --quiet --post-hook "cp /etc/letsencrypt/live/${DOMAIN}/*.pem ${DEPLOY_DIR}/deploy/ssl/ && docker-compose -f ${DEPLOY_DIR}/deploy/docker-compose.yml restart nginx"
+0 0 1 * * root certbot renew --quiet --post-hook "cp /etc/letsencrypt/live/${DOMAIN}/*.pem ${DEPLOY_DIR}/deploy/ssl/ && docker compose -f ${DEPLOY_DIR}/deploy/docker-compose.yml restart nginx"
 EOF
     
     print_info "SSL auto-renewal configured"
@@ -217,8 +220,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=${DEPLOY_DIR}/deploy
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
 
 [Install]
@@ -241,7 +244,7 @@ backup() {
     cd ${DEPLOY_DIR}
     
     # Backup database
-    docker-compose -f deploy/docker-compose.yml exec -T postgres pg_dump -U proper_prompts proper_prompts > ${BACKUP_DIR}/db_${TIMESTAMP}.sql
+    ${DOCKER_COMPOSE} -f deploy/docker-compose.yml exec -T postgres pg_dump -U proper_prompts proper_prompts > ${BACKUP_DIR}/db_${TIMESTAMP}.sql
     
     # Backup files
     tar -czf ${BACKUP_FILE} --exclude='node_modules' --exclude='.git' --exclude='__pycache__' .
@@ -256,14 +259,14 @@ backup() {
 # Show logs
 logs() {
     cd ${DEPLOY_DIR}/deploy
-    docker-compose logs -f --tail=100
+    ${DOCKER_COMPOSE} logs -f --tail=100
 }
 
 # Show status
 status() {
     print_step "Service Status"
     cd ${DEPLOY_DIR}/deploy
-    docker-compose ps
+    ${DOCKER_COMPOSE} ps
     echo ""
     print_info "Backend health:"
     curl -s http://localhost:8000/health | python3 -m json.tool 2>/dev/null || echo "Unable to reach backend"
@@ -309,11 +312,11 @@ case "${1:-deploy}" in
         ;;
     restart)
         cd ${DEPLOY_DIR}/deploy
-        docker-compose restart
+        ${DOCKER_COMPOSE} restart
         ;;
     stop)
         cd ${DEPLOY_DIR}/deploy
-        docker-compose down
+        ${DOCKER_COMPOSE} down
         ;;
     *)
         echo "Usage: $0 {install|setup|ssl|deploy|update|backup|logs|status|restart|stop}"

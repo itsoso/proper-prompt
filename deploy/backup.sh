@@ -16,7 +16,7 @@ echo "Creating backup..."
 cd ${DEPLOY_DIR}/deploy
 
 # Backup database
-docker-compose exec -T postgres pg_dump -U proper_prompts proper_prompts > ${BACKUP_DIR}/db_${TIMESTAMP}.sql
+docker compose exec -T postgres pg_dump -U proper_prompts proper_prompts > ${BACKUP_DIR}/db_${TIMESTAMP}.sql
 gzip ${BACKUP_DIR}/db_${TIMESTAMP}.sql
 
 # Backup environment

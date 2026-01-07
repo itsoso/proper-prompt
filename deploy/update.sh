@@ -16,11 +16,11 @@ cd ${DEPLOY_DIR}
 
 # Rebuild and restart services
 cd deploy
-docker-compose build --no-cache backend frontend
-docker-compose up -d
+docker compose build --no-cache backend frontend
+docker compose up -d
 
 # Show status
-docker-compose ps
+docker compose ps
 
 echo "Update complete!"
 
